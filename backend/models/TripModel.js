@@ -24,11 +24,11 @@ const TripSchema = new mongoose.Schema(
         ],
         itinerary: [
             {
-                date: Date,
+                day: Number,
+                date: String,
                 activities: [{
                     time: String,
-                    title: String,
-                    notes: String
+                    title: String
                 }]
             }
         ],

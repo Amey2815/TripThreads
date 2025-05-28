@@ -35,7 +35,15 @@ const TripSchema = new mongoose.Schema(
         polls: [
             {
                 question: String,
-                options: [{ options: String, votes: [mongoose.Schema.Types.ObjectId] }]
+                options: [{ options: String, votes: [mongoose.Schema.Types.ObjectId] }],
+                createdBy:{
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'User'
+                },
+                createdAt:{
+                    type: Date,
+                    default: Date.now
+                }
             }
         ],
         expenses:[

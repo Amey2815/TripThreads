@@ -1,3 +1,4 @@
+import { text } from 'express';
 import TripModel from '../models/TripModel.js';
 import UserModel from '../models/UserModel.js';
 
@@ -255,5 +256,91 @@ export const getTripBalance = async (req,res)=>{
     }
     catch (error) {
         res.status(500).json({message: 'Error fetching trip balance', error: error.message});
+    }
+}
+
+
+// create a poll for the trip
+
+export const createPoll = async (req,res) =>{
+    const {id} = req.params;
+    const { question, options } = req.body;
+    const userId = req.user.id;
+
+    try{
+        const trip = await TripModel.findById(id);
+        if(!trip) return res.status(404).json({message: 'Trip not found'});
+
+        if(!trip.members.includes(userId))
+            return res.status(403).json({message: 'Only members can create polls'});
+
+        const newPoll = {
+            question,
+            options: options.map(option => ({text: option , votes : []})),
+            createdBy: userId,
+        }
+
+        trip.polls.push(newPoll);
+        await trip.save();
+
+        res.status(201).json({message: "poll created" ,  polls : trip.polls});
+    }
+    catch(error){
+        res.status(500).json({message: 'Error creating poll', error: error.message});
+    }
+}
+
+
+// vote for poll 
+
+export const voteInPoll = async (req,res)=>{
+    const {id , pollIndex , optionIndex } = req.params;
+    const userId = req.user.id;
+
+    try{
+        const trip = await TripModel.findById(id);
+        if(!trip) return res.status(404).json({message: 'Trip not found'});
+
+        const poll = trip.polls[pollIndex];
+        if(!poll) return res.status(404).json({message: 'Poll not found'});
+
+        for (let option of poll.options) {
+            if(option.votes.includes(userId)){
+                return res.status(400).json({message: 'User has already voted for this option'});
+            }
+        }
+
+        poll.option[optionIndex].votes.push(userId);
+        await trip.save();
+
+        res.status(200).json({message: "  vote recorded " , poll });
+    }
+    catch(error){
+        res.status(500).json({error: error.message});
+    }
+
+}
+
+// view votes
+
+export const getPollResult = async (req,res)=>{
+    const {id , pollIndex} = req.params;
+
+    try{
+        const trip = await TripModel.findById(id).populate('polls.options.votes')
+        if(!trip) return res.status(404).json({message: 'Trip not found'});
+
+        const poll = trip.polls[pollIndex];
+        if(!poll) return res.status(404).json({message: 'Poll not found'});
+
+        const result = poll.options.map(option => ({
+            text: option.text ,
+            votes: option.votes.length ,
+        }));
+
+        res.status(200).json({question:poll.question, result});
+    }
+    catch(error){
+        res.status(500).json({error: error.message});
     }
 }

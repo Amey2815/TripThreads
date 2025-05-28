@@ -1,5 +1,5 @@
 import express from 'express';
-import { addExpense, addOrUpdateItineraryDay, addTripMember, createTrip , deleteItineraryDay, getTripBalance, getTripById , getUserTrips, removeTripMember } from '../controllers/TripController.js';
+import { addExpense, addOrUpdateItineraryDay, addTripMember, createPoll, createTrip , deleteItineraryDay, getPollResult, getTripBalance, getTripById , getUserTrips, removeTripMember, voteInPoll } from '../controllers/TripController.js';
 import { verifyToken } from '../middleware/authMiddleware.js';
 
 
@@ -20,5 +20,10 @@ TripRouter.delete('/:id/itinerary/:day',verifyToken , deleteItineraryDay);
 // expenses split 
 TripRouter.post('/:id/expenses',verifyToken,addExpense);
 TripRouter.get('/:id/balance',verifyToken, getTripBalance);
+
+// vote for trip
+TripRouter.post('/:id/polls',verifyToken,createPoll);
+TripRouter.post('/:id/polls/:pollIndex/vote/:optionIndex',verifyToken,voteInPoll);
+TripRouter.post('/:id/polls/:pollIndex/results', verifyToken ,getPollResult);
 
 export default TripRouter;

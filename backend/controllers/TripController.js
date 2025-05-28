@@ -173,7 +173,6 @@ export const addOrUpdateItineraryDay = async (req,res) => {
 
 
 // delete itinerary day
-
 export const deleteItineraryDay = async (req, res) => {
     const {id} = req.params;
     const userId = req.user.id;
@@ -194,5 +193,67 @@ export const deleteItineraryDay = async (req, res) => {
     }
     catch (error) {
         res.status(500).json({message: 'Error deleting itinerary day', error: error.message});
+    }
+}
+
+
+// add expense to trip
+export const addExpense = async (req, res) => {
+    const {id} = req.params;
+    const { description , amount , paidBy , splitWith } = req.body;
+    const userId = req.user.id;
+
+    try{
+        const trip = await TripModel.findById(id);
+        if (!trip) {
+            return res.status(404).json({message: 'Trip not found'});
+        }
+
+        if (!trip.members.includes(userId)) {
+            return res.status(403).json({message: 'You are not a member of this trip'});
+        }
+
+        trip.expenses.push({
+            description,
+            amount,
+            paidBy,
+            splitWith,
+        });
+
+        await trip.save();
+        res.status(201).json({message: "expense added " ,  expenses: trip.expenses});
+    }
+    catch(error){
+        res.status(500).json({message: 'Error adding expense', error: error.message});
+    }
+}
+
+// slit expense among members
+export const getTripBalance = async (req,res)=>{
+    const {id}= req.params;
+    try{
+        const trip = await TripModel.findById(id).populate('expenses.paidBy expenses.splitWith');
+        if (!trip) return res.status(404).json({message: 'Trip not found'});
+
+        const balance = {};
+
+        trip.members.forEach(member => {
+            balance[member.toString()] = 0;
+        });
+
+        for (let expense of trip.expenses){
+            const share = expense.amount / expense.splitWith.length;
+
+            for  (let user of expense.splitWith) {
+                balance[user.toString()] -= share;
+            }
+
+            balance[expense.paidBy.toString()] += expense.amount;
+        }
+
+        res.status(200).json({balance});
+    }
+    catch (error) {
+        res.status(500).json({message: 'Error fetching trip balance', error: error.message});
     }
 }

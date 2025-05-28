@@ -40,7 +40,7 @@ const TripSchema = new mongoose.Schema(
         ],
         expenses:[
             {
-                title: String,
+                description: String,
                 amount: Number,
                 paidBy: {
                     type: mongoose.Schema.Types.ObjectId,
@@ -49,7 +49,11 @@ const TripSchema = new mongoose.Schema(
                 splitWith: [{
                     type: mongoose.Schema.Types.ObjectId,
                     ref: 'User'
-                }]
+                }],
+                date:{
+                    type: Date,
+                    default: Date.now
+                }
             }
         ],
         packingList: [String],

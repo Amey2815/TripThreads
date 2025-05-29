@@ -1,17 +1,17 @@
 import React, { useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import axios from 'axios';
+import axios from '../utils/axios';
 import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
-
+  
   const [form, setform] = useState({ email: "", password: "" });
   const { login } = useAuth();
   const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("/api/auth/login", form);
+      const response = await axios.post(`/api/auth/login`, form);
       login(response.data.user, response.data.token);
       navigate('/trips')
     }
@@ -72,7 +72,7 @@ const Login = () => {
 
           <div className="text-center text-sm text-gray-500">
             Don't have an account?{' '}
-            <a href="#" className="font-medium text-amber-600 hover:text-amber-700 hover:underline">
+            <a href="/register" className="font-medium text-amber-600 hover:text-amber-700 hover:underline">
               Sign up
             </a>
           </div>

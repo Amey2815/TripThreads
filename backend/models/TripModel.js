@@ -7,7 +7,7 @@ const TripSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        description: {
+        destination: {
             type: String,
             required: true,
         },
@@ -64,8 +64,13 @@ const TripSchema = new mongoose.Schema(
                 }
             }
         ],
+        inviteCode: {
+  type: String,
+  unique: true,
+  required: true
+},
         packingList: [String],
-        notes: String
+        notes: String,
     }
 );
 

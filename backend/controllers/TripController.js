@@ -1,32 +1,72 @@
-import { text } from 'express';
+
 import TripModel from '../models/TripModel.js';
 import UserModel from '../models/UserModel.js';
 
+const generateUniqueInviteCode = async () => {
+  let code;
+  let exists = true;
+  while (exists) {
+    code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    exists = await TripModel.exists({ inviteCode: code });
+  }
+  return code;
+};
 
 // Create a new trip
-export const createTrip = async (req, res) =>{
-    const {name,destination} = req.body;
+export const createTrip = async (req, res) => {
+    const { name, destination } = req.body;
     const userId = req.user.id;
-    try{
+
+    try {
+        // ✅ MAKE SURE THIS LINE EXISTS AND IS AWAITED
+        const inviteCode = await generateUniqueInviteCode();
+
         const trip = await TripModel.create({
             name,
             destination,
             createdBy: userId,
             members: [userId],
-            itinerary:[],
-            polls:[],
-            expenses:[],
-            packingList : [],
+            inviteCode, // ✅ use generated code here
+            itinerary: [],
+            polls: [],
+            expenses: [],
+            packingList: [],
             notes: ''
-        })
+        });
 
-        await UserModel.findByIdAndUpdate(userId,{
+        await UserModel.findByIdAndUpdate(userId, {
             $push: { trips: trip._id }
         });
+
         res.status(201).json(trip);
+    } catch (error) {
+        console.error("Trip creation error:", error);
+        res.status(500).json({ message: 'Error creating trip', error: error.message });
+    }
+};
+
+
+
+
+// join by id 
+export const joinTripByInviteCode = async (req, res) =>{
+    const { code } = req.params;
+    const userId = req.user.id;
+    try{
+        const trip = await TripModel.findOne({ inviteCode: code });
+        if(!trip) return res.status(404).json({message: 'Trip not found'});
+
+        if(trip.members.includes(userId)){
+            return res.status(400).json({message: 'You are already a member of this trip'});
+        }
+        trip.members.push(userId);
+        await trip.save();
+        await UserModel.findByIdAndUpdate(userId,{ $push: { trips: trip._id } });
+
+        res.status(200).json({message: 'Joined trip successfully', trip});
     }
     catch (error) {
-        res.status(500).json({message: 'Error creating trip', error: error.message});
+        res.status(500).json({message: 'Error joining trip', error: error.message});
     }
 }
 
@@ -36,7 +76,7 @@ export const getUserTrips = async (req,res)=>{
     const userId = req.user.id;
     try{
         const user = await UserModel.findById(userId).populate('trips');
-        res.status(200).json(user.trips);
+        res.status(200).json({ trips: user.trips });
     }
     catch (error) {
         res.status(500).json({message: 'Error fetching trips', error: error.message});

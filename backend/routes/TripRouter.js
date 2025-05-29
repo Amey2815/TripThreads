@@ -1,5 +1,5 @@
 import express from 'express';
-import { addExpense, addOrUpdateItineraryDay, addTripMember, createPoll, createTrip , deleteItineraryDay, getPollResult, getTripBalance, getTripById , getUserTrips, removeTripMember, voteInPoll } from '../controllers/TripController.js';
+import { addExpense, addOrUpdateItineraryDay, addTripMember, createPoll, createTrip , deleteItineraryDay, getPollResult, getTripBalance, getTripById , getUserTrips, joinTripByInviteCode, removeTripMember, voteInPoll } from '../controllers/TripController.js';
 import { verifyToken } from '../middleware/authMiddleware.js';
 
 
@@ -9,6 +9,10 @@ const TripRouter =  express.Router();
 TripRouter.post('/create', verifyToken , createTrip);
 TripRouter.get('/my-trips',verifyToken , getUserTrips);
 TripRouter.get('/:id', verifyToken, getTripById);
+
+// routes/trips.js
+TripRouter.post('/join', verifyToken, joinTripByInviteCode);
+
 
 TripRouter.post('/:id/add-member', verifyToken, addTripMember )
 TripRouter.post('/:id/remove-member', verifyToken , removeTripMember )
